@@ -3,8 +3,18 @@ var quizContainerElement = document.getElementById('quiz-container')
 var questionElement = document.getElementById('question')
 var answerButtonsElement = document.getElementById('answer-buttons')
 var nextButton = document.getElementById('next-btn')
-let questionsMixed, currentQuestionIndex
+var yourScoreElement = document.getElementById('your-score')
+var currentScoreSpan = document.getElementById('current-score')
+var timerElement = document.getElementById('timer')
+var timerSpanElement = document.getElementById('timer-span')
+var timeLeft = 30
+var highScores = JSON.parse(localStorage.getItem(highScores)) || [];
+var highScoresElement = document.getElementById('top-five')
+var initialsInputElement = document.getElementById('initials-input')
+var initialsFormElement = document.getElementById('name-input')
+let questionsMixed, currentQuestionIndex, timer, currentScoreIndex;
 
+// console.log(highScores);
 startButton.addEventListener('click', startGame)
 nextButton.addEventListener('click', () => {
     currentQuestionIndex++
@@ -12,12 +22,25 @@ nextButton.addEventListener('click', () => {
 })
 
 function startGame() {
-    startButton.classList.add('hide');
-    quizContainerElement.classList.remove('hide');
+    startButton.classList.add('hide')
+    timer = setInterval(updateTimer, 1000) 
+    quizContainerElement.classList.remove('hide')
     questionsMixed = questions.sort(() => Math.random() - .5)
     currentQuestionIndex = 0;
-    setNextQuestion();
+    currentScoreIndex = 0;
+    yourScoreElement.classList.remove('hide')
+    currentScoreSpan.innerText = currentScoreIndex
+    timerElement.classList.remove('hide')
+    setNextQuestion()
+}
 
+function updateTimer() {
+    timeLeft = timeLeft - 1;
+    if (timeLeft >= 0) {
+        timerSpanElement.innerText = timeLeft;
+    } else {
+        gameOver()
+    }
 }
 
 function setNextQuestion() {
@@ -40,6 +63,7 @@ function showQuestion(question) {
 }
 
 function resetState() {
+    clearStatusClass(document.body)
     nextButton.classList.add('hide');
     while (answerButtonsElement.firstChild) {
         answerButtonsElement.removeChild(answerButtonsElement.firstChild)
@@ -52,14 +76,21 @@ function selectAnswer(e) {
     setStatusClass(document.body, correct)
     Array.from(answerButtonsElement.children).forEach(button => {
         setStatusClass(button, button.dataset.correct)
+        updateScore(button, button.dataset.correct)
     })
     if (questionsMixed.length > currentQuestionIndex + 1) {
         nextButton.classList.remove('hide');
-    } else {
-        startButton.innerText = 'Restart'
-        startButton.classList.remove('hide')
+    } //else {
+    //     startButton.innerText = 'Restart'
+    //     startButton.classList.remove('hide')
+    // }   
+}
+
+function updateScore(element, correct) {
+    if (correct) {
+        currentScoreIndex++
+        currentScoreSpan.innerText = currentScoreIndex
     }
-    
 }
 
 function setStatusClass(element, correct) {
@@ -74,6 +105,28 @@ function setStatusClass(element, correct) {
 function clearStatusClass(element) {
     element.classList.remove('correct');
     element.classList.remove('wrong')
+}
+
+function gameOver() {
+    clearInterval(timer);
+    // localStorage.setItem()
+    startButton.innerText = 'Restart'
+    startButton.classList.remove('hide')
+    initialsInputElement.classList.remove('hide')
+    initialsFormElement.addEventListener('keyup', storeHighScore())
+}
+
+const score = {
+    score: currentScoreIndex,
+    name: initialsFormElement.value
+}; 
+
+highScores.push(score);
+console.log(highScores);
+
+function storeHighScore() {
+    var finalScore = currentScoreIndex
+    window.localStorage.setItem('highScores', JSON.stringigy([]))
 }
 
 var questions = [
